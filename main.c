@@ -58,7 +58,8 @@ uint8_t Ang3=45;
 float carga=1;
 int pos=0;
 double T=0.5;
-int Posicion_Maquina=1, pulso=0;
+int  pulso=0;
+volatile uint8_t Posicion_Maquina=1;
 /*******************************ESTRUCTURA PARA EL CAMBIO DE ESTADO*****************************************************/
 struct Maquina{
     int Anterior;
@@ -86,6 +87,11 @@ void Configuracion(void){
         /*************HABILITACION DE PUERTO F PUSHs PLACA TIVA ********************/
         GPIOPinTypeGPIOInput(GPIO_PORTF_BASE,GPIO_PIN_0|GPIO_PIN_4);                //Habilitar PUSH de entradas.
         GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_0|GPIO_PIN_4, GPIO_STRENGTH_2MA,GPIO_PIN_TYPE_STD_WPU);//Configura el modo de los pines de entrada
+        //*****************INTERRUPCION PARA LOS PUSH **************************//
+        IntEnable(INT_GPIOF);
+        GPIOIntTypeSet(GPIO_PORTF_BASE,GPIO_PIN_0|GPIO_PIN_4,GPIO_FALLING_EDGE);
+        GPIOIntEnable(GPIO_PORTF_BASE,GPIO_INT_PIN_0|GPIO_INT_PIN_4);
+        IntPrioritySet(INT_GPIOF,0);
 }
 /****************************************************************************************/
 /************************************CONFIGURACION DE PWM********************************/
@@ -141,8 +147,18 @@ void GPIO_INT_Handler(void){
     if(statusInt==16){
         Posicion_Maquina = ME[Posicion_Maquina].Anterior;
     }
+    switch (Posicion_Maquina){              //Envio el estado actual de la maquina
+        case 0:
+            UARTCharPut(UART0_BASE,'0');
+            break;
+        case 1:
+            UARTCharPut(UART0_BASE,'1');
+            break;
+        case 2:
+            UARTCharPut(UART0_BASE,'2');
+            break;
+    }
 
-    UARTCharPut(UART0_BASE,ME[Posicion_Maquina].Actual); //Envio el estado actual de la maquina
 }
 //************************************************************************************/
 void UARTIntHandler(void){
@@ -156,32 +172,19 @@ void UARTIntHandler(void){
         dato = UARTCharGetNonBlocking(UART0_BASE);;
         SysCtlDelay(0.01*(SysCtlClockGet())/3);
     }
-    UARTCharPut(UART0_BASE,dato);
+    //UARTCharPut(UART0_BASE,dato);
     Maquina_estado(Posicion_Maquina);
 
 }
 
 int main(void)
-W{
+{
     Configuracion(); //CONFIGURACION PERIFERICOS
     PWM_Config();    //CONFGGURACION PWM
     UART_Config();   //CONFGURACION UART0
-    UARTCharPut(UART0_BASE,ME[Posicion_Maquina].Actual);
+    //UARTCharPut(UART0_BASE,ME[Posicion_Maquina].Actual);
     while(true){
 
-        //Maquina_estado(Posicion_Maquina);
-        /*for (pos = 0; pos <= 180; pos++) {
-          Servo_Base(pos);
-          Servo_Brazo(pos);
-          //Servo_Mano(pos);
-          SysCtlDelay(T*SysCtlClockGet()/3);
-        }
-        for (pos = 180; pos >= 0; pos--) {
-            Servo_Base(pos);
-            Servo_Brazo(pos);
-            //Servo_Mano(pos);
-            SysCtlDelay(T*SysCtlClockGet()/3);
-        }*/
     }
 
 
