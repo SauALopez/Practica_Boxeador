@@ -43,22 +43,22 @@ void Servo_Brazo(int Ang);      //PD0
 void Servo_Mano(int Ang);       //PD1
 
 void Maquina_estado(int estado);        //Switch-CASE PARA EL CAMBIO DE ESTADO DE LA MAQUINA
-void Estado0(void);                     //ESTADO 0, AUTOMATICO
-void Estado1(void);                     //ESTADO 1, MANUAL
-void Estado2(void);                     //ESTADO 2, BOXEADOR
+void Estado0(uint8_t instruccion);                     //ESTADO 0, AUTOMATICO
+void Estado1(uint8_t instruccion);                     //ESTADO 1, MANUAL
+void Estado2(uint8_t instruccion);                     //ESTADO 2, BOXEADOR
 /***********************VARIABLES A USAR PWM******************************************/
 #define frecuencia 50
 uint32_t Load;
 uint32_t PWMClk;
 volatile uint8_t dato;
 /***********************MAS VARIBLES****************************************/
-uint32_t Ang1=45;
-uint32_t Ang2=45;
-uint32_t Ang3=45;
+uint8_t Ang1=45;
+uint8_t Ang2=45;
+uint8_t Ang3=45;
 float carga=1;
 int pos=0;
 double T=0.5;
-int Posicion_Maquina=0, pulso=0;
+int Posicion_Maquina=1, pulso=0;
 /*******************************ESTRUCTURA PARA EL CAMBIO DE ESTADO*****************************************************/
 struct Maquina{
     int Anterior;
@@ -73,7 +73,8 @@ MaquinaEstados ME[3]={
 };
 /***************************************************************************************/
 void Configuracion(void){
-        SysCtlClockSet(SYSCTL_XTAL_16MHZ|SYSCTL_SYSDIV_2_5);                          // Configurar reloj 80Mhz
+        SysCtlClockSet(SYSCTL_XTAL_16MHZ|SYSCTL_SYSDIV_2_5);                          // Configurar reloj 80Mhz.
+        IntMasterEnable();
         SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);                        //Habilitar periferico GPIO PORT F
         SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);                        //Habilitar periferico GPIO PORT B
         SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);                        //Habilitar periferico GPIO PORT D
@@ -119,7 +120,7 @@ void UART_Config(void){
     GPIOPinConfigure(GPIO_PA1_U0TX);
     UARTConfigSetExpClk(UART0_BASE, SysCtlClockGet(), 115200,(UART_CONFIG_WLEN_8));
 
-    IntMasterEnable();
+
     IntEnable(INT_UART0);
     UARTIntEnable(UART0_BASE,UART_INT_RX|UART_INT_RT);
 }
@@ -129,6 +130,7 @@ void UART_Config(void){
 //*************************************************************************************/
 void GPIO_INT_Handler(void){
     pulso++;
+    int statusInt;
     //********************RUTINA INTERRUPCION*****************************************//
     statusInt=GPIOIntStatus(GPIO_PORTF_BASE,true);
     GPIOIntClear(GPIO_PORTF_BASE,statusInt);
@@ -139,6 +141,8 @@ void GPIO_INT_Handler(void){
     if(statusInt==16){
         Posicion_Maquina = ME[Posicion_Maquina].Anterior;
     }
+
+    UARTCharPut(UART0_BASE,ME[Posicion_Maquina].Actual); //Envio el estado actual de la maquina
 }
 //************************************************************************************/
 void UARTIntHandler(void){
@@ -153,28 +157,19 @@ void UARTIntHandler(void){
         SysCtlDelay(0.01*(SysCtlClockGet())/3);
     }
     UARTCharPut(UART0_BASE,dato);
-    //Comparador();
-    if (dato=='A'){
-        Servo_Mano(45);
-    }
-    if(dato=='B'){
-        Servo_Mano(90);
-    }
-    if(dato=='C'){
-        Servo_Mano(135);
-    }
-    if(dato=='D'){
-        Servo_Mano(180);
-    }
+    Maquina_estado(Posicion_Maquina);
+
 }
 
 int main(void)
-{
+W{
     Configuracion(); //CONFIGURACION PERIFERICOS
     PWM_Config();    //CONFGGURACION PWM
     UART_Config();   //CONFGURACION UART0
+    UARTCharPut(UART0_BASE,ME[Posicion_Maquina].Actual);
     while(true){
-        Maquina_estado(Posicion_Maquina);
+
+        //Maquina_estado(Posicion_Maquina);
         /*for (pos = 0; pos <= 180; pos++) {
           Servo_Base(pos);
           Servo_Brazo(pos);
@@ -194,24 +189,66 @@ int main(void)
 void Maquina_estado(int estado){
     switch(estado){
     case 0 :
-        Estado0();
+        Estado0(dato);
         break;
     case 1 :
-        Estado1();
+        Estado1(dato);
         break;
     case 2 :
-        Estado2();
+        Estado2(dato);
         break;
     }
 
 }
-void Estado0(void){
-
+void Estado0(uint8_t instruccion){              //Estado Automatico
+    switch(instruccion){
+    case '1':
+        ////Movimiento Tirar Caja 1.
+        break;
+    case '2':
+        ////Movimiento Tirar Caja 2.
+        break;
+    case '3':
+        ////Movimineto Tirar Caja 3.
+        break;
+    }
 }
-void Estado1(void){
-
+void Estado1(uint8_t instruccion){              //Estado Manual
+    switch (instruccion){
+        case('W'):                         //BRAZO
+            if(Ang1==180){break;}else{
+                Ang1++;}
+            Servo_Brazo(Ang1);
+            break;
+        case('S'):
+            if(Ang1==0){break;}else{
+            Ang1--;}
+            Servo_Brazo(Ang1);
+            break;
+        case('A'):                          //BASE
+            if(Ang2==180){break;}else{
+                Ang2++;}
+            Servo_Base(Ang2);
+            break;
+        case('D'):
+            if(Ang2==0){break;}else{
+                Ang2--;}
+            Servo_Base(Ang2);
+            break;
+        case('R'):                          //MANO
+            if(Ang3==180){break;}else{
+                Ang3++;}
+            Servo_Mano(Ang3);
+            break;
+        case('F'):
+            if(Ang3==0){break;}else{
+                Ang3--;}
+            Servo_Mano(Ang3);
+            break;
+    }
+    //SysCtlDelay(0.01*SysCtlClockGet()/3);
 }
-void Estado2(void){
+void Estado2(uint8_t instruccion){              //Estado Boxeador
 
 }
 /***********************METODOS PARA CARGA DE SERVOS, RECIBEN ANGULO*******************/
