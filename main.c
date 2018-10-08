@@ -49,7 +49,7 @@ void Maquina_estado(int estado);        //Switch-CASE PARA EL CAMBIO DE ESTADO D
 void Estado1(uint8_t instruccion);                     //ESTADO 1, MANUAL
 void Estado2(uint8_t instruccion);                     //ESTADO 2, BOXEADOR
 /***************************DEFINICIONES**********************************************/
-#define Time 0.01
+#define Time 0.1
 /***********************VARIABLES A USAR PWM******************************************/
 #define frecuencia 50
 uint32_t Load;
@@ -60,6 +60,7 @@ uint8_t Ang1=45;
 uint8_t Ang2=45;
 uint8_t Ang3=45;
 float carga=1;
+float Frequency=0;
 int pos=0;
 int i=0;
 int conteo=0;
@@ -67,6 +68,7 @@ bool CONTROL=true;
 double T=0.5;
 int  pulso=0;
 volatile uint8_t Posicion_Maquina=1;
+int tiempo=1;
 /*******************************ESTRUCTURA PARA EL CAMBIO DE ESTADO*****************************************************/
 struct Maquina{
     int Anterior;
@@ -89,86 +91,88 @@ struct Servo_Movimiento{
 typedef struct Servo_Movimiento MOV1;
 MOV1 INICIAL[16]={
        {45,45,45},               //Grados primer movimiento
-       {45,45,45},               //Grados segundo movimiento
+       {40,40,40},               //Grados segundo movimiento
        {45,45,45},               //.
+       {40,40,40},               //.
        {45,45,45},               //.
+       {40,40,40},               //.
        {45,45,45},               //.
+       {40,40,40},               //.
        {45,45,45},               //.
+       {40,40,40},               //.
        {45,45,45},               //.
+       {40,40,40},               //.
        {45,45,45},               //.
+       {40,40,40},               //.
        {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45}                //Grados ultimo movimiento
+       {40,40,40}                //Grados ultimo movimiento
 };
 /*******************************MOVIMEINTOS PARA TIRAR CAJA1***********************/
 typedef struct Servo_Movimiento MOV2;
 MOV2 CAJA1[16]={
        {45,45,45},               //Grados primer movimiento
-       {45,45,45},               //Grados segundo movimiento
+       {40,40,40},               //Grados segundo movimiento
+       {35,35,35},               //.
+       {30,30,30},               //.
+       {35,35,35},               //.
+       {40,40,40},               //.
        {45,45,45},               //.
+       {40,40,40},               //.
+       {35,35,35},               //.
+       {30,30,30},               //.
+       {35,35,35},               //.
+       {40,40,40},               //.
        {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45}                //Grados ultimo movimiento
+       {40,40,40},               //.
+       {35,35,35},               //.
+       {40,40,40}                //Grados ultimo movimiento
 };
 /*******************************MOVIMEINTOS PARA TIRAR CAJA2***********************/
 typedef struct Servo_Movimiento MOV3;
 MOV3 CAJA2[16]={
        {45,45,45},               //Grados primer movimiento
-       {45,45,45},               //Grados segundo movimiento
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45}                //Grados ultimo movimiento
+       {50,50,50},               //Grados segundo movimiento
+       {55,55,55},               //.
+       {60,60,60},               //.
+       {65,65,65},               //.
+       {70,70,70},               //.
+       {75,75,75},               //.
+       {80,80,80},               //.
+       {85,85,85},               //.
+       {90,90,90},               //.
+       {85,85,85},               //.
+       {80,80,80},               //.
+       {75,75,75},               //.
+       {70,70,70},               //.
+       {60,60,60},               //.
+       {50,50,50}                //Grados ultimo movimiento
 };
 /*******************************MOVIMEINTOS PARA TIRAR CAJA3***********************/
 typedef struct Servo_Movimiento MOV4;
 MOV4 CAJA3[16]={
-       {45,45,45},               //Grados primer movimiento
-       {45,45,45},               //Grados segundo movimiento
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45},               //.
-       {45,45,45}                //Grados ultimo movimiento
+       {100,100,100},               //Grados primer movimiento
+       {105,105,105},               //Grados segundo movimiento
+       {110,110,110},               //.
+       {115,115,115},               //.
+       {120,120,120},               //.
+       {125,125,125},               //.
+       {130,130,130},               //.
+       {135,135,135},               //.
+       {140,140,140},               //.
+       {130,130,130},               //.
+       {120,120,120},               //.
+       {110,110,110},               //.
+       {100,100,100},               //.
+       {80,80,80},               //.
+       {60,60,60},               //.
+       {40,40,40}                //Grados ultimo movimiento
 };
 /***************************************************************************************/
 void Configuracion(void){
+
         SysCtlClockSet(SYSCTL_XTAL_16MHZ|SYSCTL_SYSDIV_2_5);                          // Configurar reloj 80Mhz.
         IntMasterEnable();
+        Frequency = SysCtlClockGet();
         SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);                        //Habilitar periferico GPIO PORT F
         SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);                        //Habilitar periferico GPIO PORT B
         SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);                        //Habilitar periferico GPIO PORT D
@@ -225,7 +229,7 @@ void UART_Config(void){
 }
 /*****************************************************************************************/
 void Timer_Config(void){
-    /************************TIMERA - 0************************************/
+    /************************TIMERA B - 0************************************/
     /***********************PARA RECORRER MOVIMIENTOS ESTADO 0************************************/
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
     TimerConfigure(TIMER0_BASE,TIMER_CFG_PERIODIC);
@@ -234,23 +238,25 @@ void Timer_Config(void){
     TimerIntEnable(TIMER0_BASE,TIMER_TIMA_TIMEOUT);
     IntPrioritySet(INT_TIMER0A,0);
     //IntEnable(INT_TIMER0A);
-    /************************TIMERA - 1************************************/
+    /************************TIMERA A - 0************************************/
     /***********************PARA RECORRER MOVIMIENTOS ESTADO 2************************************/
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
     TimerConfigure(TIMER1_BASE,TIMER_CFG_PERIODIC);
-    TimerLoadSet(TIMER1_BASE,TIMER_A,(Time *SysCtlClockGet()) );
-    TimerEnable(TIMER1_BASE,TIMER_A);
+    TimerLoadSet(TIMER1_BASE,TIMER_BOTH,(Time *SysCtlClockGet()) );
+    TimerEnable(TIMER1_BASE,TIMER_BOTH);
     TimerIntEnable(TIMER1_BASE,TIMER_TIMA_TIMEOUT);
     IntPrioritySet(INT_TIMER1A,0);
-    //IntEnable(INT_TIMER1A);
+    //IntEnable(INT_TIMER0B);
     /************************TIMERA - 2************************************/
     /***********************PARA EL CAMBIO EL TIEMPO ENTRE MOVIMIENTOS************************************/
+
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2);
-    TimerConfigure(TIMER2_BASE,TIMER_CFG_PERIODIC);
-    TimerEnable(TIMER2_BASE,TIMER_A);
+    TimerConfigure(TIMER2_BASE,TIMER_CFG_ONE_SHOT);
+    TimerLoadSet(TIMER2_BASE,TIMER_A,(tiempo*SysCtlClockGet()) );
+    //TimerEnable(TIMER2_BASE,TIMER_A);
     TimerIntEnable(TIMER2_BASE,TIMER_TIMA_TIMEOUT);
     IntPrioritySet(INT_TIMER2A,0);
-    //IntEnable(INT_TIMER2A);
+    IntEnable(INT_TIMER2A);
 
 }
 //********************RUTINAS DE INTERRUPCION********************************/
@@ -379,16 +385,18 @@ void Int_RECORRIDO_ESTADO2(void){
     if(i==15){
     i=0;
     IntDisable(INT_TIMER1A);
+    TimerDisable(TIMER2_BASE,TIMER_A);
+    TimerEnable(TIMER2_BASE,TIMER_A);
     }else{
     i++;
-}
+    }
 }
 /****************************************************************************************/
 void Int_MOV_ESTADO2(void){
     TimerIntClear(TIMER2_BASE,TIMER_TIMA_TIMEOUT);
-    if(pos<6){
+    if(pos>5){
         pos=0;
-        IntDisable(INT_TIMER2A);
+        TimerDisable(TIMER2_BASE,TIMER_A);
     }else{
         pos++;
         IntEnable(INT_TIMER1A);
@@ -401,6 +409,7 @@ int main(void)
     PWM_Config();    //CONFGGURACION PWM
     UART_Config();   //CONFGURACION UART0
     //UARTCharPut(UART0_BASE,ME[Posicion_Maquina].Actual);
+    Timer_Config();
     while(true){
 
     }
@@ -448,12 +457,12 @@ void Estado1(uint8_t instruccion){              //Estado Manual
             break;
         case('A'):                          //BASE
             if(Ang2==180){break;}else{
-                Ang2++;}
+                Ang2=Ang2+5;}
             Servo_Base(Ang2);
             break;
         case('D'):
             if(Ang2==0){break;}else{
-                Ang2--;}
+                Ang2=Ang2-5;}
             Servo_Base(Ang2);
             break;
         case('R'):                          //MANO
@@ -470,9 +479,10 @@ void Estado1(uint8_t instruccion){              //Estado Manual
     //SysCtlDelay(0.01*SysCtlClockGet()/3);
 }
 void Estado2(uint8_t instruccion){              //Estado Boxeador
-         int tiempo = instruccion -48;
-         TimerLoadSet(TIMER2_BASE,TIMER_A,(tiempo*SysCtlClockGet()) );
-         IntEnable(INT_TIMER2A);
+         tiempo = instruccion -48;
+         TimerLoadSet(TIMER2_BASE,TIMER_A,(tiempo *SysCtlClockGet()) );
+         TimerEnable(TIMER2_BASE,TIMER_A);
+
 }
 /***********************METODOS PARA CARGA DE SERVOS, RECIBEN ANGULO*******************/
 void Servo_Base(int Ang){

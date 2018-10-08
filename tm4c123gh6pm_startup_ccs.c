@@ -106,9 +106,9 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // ADC Sequence 2
     IntDefaultHandler,                      // ADC Sequence 3
     IntDefaultHandler,                      // Watchdog timer
-    Int_MOV_ESTADO0,                      // Timer 0 subtimer A
+    Int_MOV_ESTADO0,                        // Timer 0 subtimer A
     IntDefaultHandler,                      // Timer 0 subtimer B
-    Int_RECORRIDO_ESTADO2,                      // Timer 1 subtimer A
+    Int_RECORRIDO_ESTADO2,                  // Timer 1 subtimer A
     IntDefaultHandler,                      // Timer 1 subtimer B
     Int_MOV_ESTADO2,                      // Timer 2 subtimer A
     IntDefaultHandler,                      // Timer 2 subtimer B
@@ -117,7 +117,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Analog Comparator 2
     IntDefaultHandler,                      // System Control (PLL, OSC, BO)
     IntDefaultHandler,                      // FLASH Control
-    GPIO_INT_Handler,                      // GPIO Port F
+    GPIO_INT_Handler,                       // GPIO Port F
     IntDefaultHandler,                      // GPIO Port G
     IntDefaultHandler,                      // GPIO Port H
     IntDefaultHandler,                      // UART2 Rx and Tx
