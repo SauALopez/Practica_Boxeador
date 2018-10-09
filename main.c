@@ -44,13 +44,15 @@ void Servo_Base(int Ang);       //PB5
 void Servo_Brazo(int Ang);      //PD0
 void Servo_Mano(int Ang);       //PD1
 
+void Posicion_Inicial(void);
+
 void Maquina_estado(int estado);        //Switch-CASE PARA EL CAMBIO DE ESTADO DE LA MAQUINA
 //void Estado0(uint8_t instruccion);                     //ESTADO 0, AUTOMATICO
 void Estado1(uint8_t instruccion);                     //ESTADO 1, MANUAL
 void Estado2(uint8_t instruccion);                     //ESTADO 2, BOXEADOR
 /***************************DEFINICIONES**********************************************/
 #define Time 0.1
-/***********************VARIABLES A USAR PWM******************************************/
+/***********************A USAR EN PWM******************************************/
 #define frecuencia 50
 uint32_t Load;
 uint32_t PWMClk;
@@ -67,8 +69,9 @@ int conteo=0;
 bool CONTROL=true;
 double T=0.5;
 int  pulso=0;
-volatile uint8_t Posicion_Maquina=1;
+volatile uint8_t Posicion_Maquina=0;
 int tiempo=1;
+int ControlAng1=0, ControlAng2=0, ControlAng3=0;
 /*******************************ESTRUCTURA PARA EL CAMBIO DE ESTADO*****************************************************/
 struct Maquina{
     int Anterior;
@@ -300,18 +303,26 @@ void UARTIntHandler(void){
         SysCtlDelay(0.01*(SysCtlClockGet())/3);
     }
     //UARTCharPut(UART0_BASE,dato);
+    if(dato=='Q'){                              //Syncronizacion de estados
+        switch (Posicion_Maquina){              //Envio el estado actual de la maquina
+            case 0:
+                UARTCharPut(UART0_BASE,'0');
+                break;
+            case 1:
+                UARTCharPut(UART0_BASE,'1');
+                break;
+            case 2:
+                UARTCharPut(UART0_BASE,'2');
+                break;
+        }
+    }else{
     Maquina_estado(Posicion_Maquina);
-
+    }
 }
 /***************************************************************************************/
 void Int_MOV_ESTADO0(void){
     TimerIntClear(TIMER0_BASE,TIMER_TIMA_TIMEOUT);
-    if(CONTROL){
-        Servo_Base(INICIAL[i].Base);
-        Servo_Brazo(INICIAL[i].Brazo);
-        Servo_Mano(INICIAL[i].Mano);
-    }else{
-        switch(dato){
+    switch(dato){
         case '1':
             Servo_Base(CAJA1[i].Base);
             Servo_Brazo(CAJA1[i].Brazo);
@@ -327,17 +338,12 @@ void Int_MOV_ESTADO0(void){
             Servo_Brazo(CAJA3[i].Brazo);
             Servo_Mano(CAJA3[i].Mano);
             break;
-        }
     }
+
     if (i==15){
         i=0;
-        if(conteo<2){
-            conteo++;
-            CONTROL = !CONTROL;
-        }else{
-            conteo=0;
-            IntDisable(INT_TIMER0A);
-        }
+        IntDisable(INT_TIMER0A);
+        Posicion_Inicial();
     }else{
         i++;
     }
@@ -419,6 +425,7 @@ int main(void)
 void Maquina_estado(int estado){
     switch(estado){
     case 0 :
+        Posicion_Inicial();
         IntEnable(INT_TIMER0A);
         break;
     case 1 :
@@ -446,33 +453,33 @@ void Maquina_estado(int estado){
 void Estado1(uint8_t instruccion){              //Estado Manual
     switch (instruccion){
         case('W'):                         //BRAZO
-            if(Ang1==180){break;}else{
-                Ang1++;}
+            if(Ang1==0){break;}else{
+                Ang1=Ang1+1;}
             Servo_Brazo(Ang1);
             break;
         case('S'):
-            if(Ang1==0){break;}else{
-            Ang1--;}
+            if(Ang1==180){break;}else{
+            Ang1=Ang1-1;}
             Servo_Brazo(Ang1);
             break;
         case('A'):                          //BASE
             if(Ang2==180){break;}else{
-                Ang2=Ang2+5;}
+                Ang2=Ang2+1;}
             Servo_Base(Ang2);
             break;
         case('D'):
             if(Ang2==0){break;}else{
-                Ang2=Ang2-5;}
+                Ang2=Ang2-1;}
             Servo_Base(Ang2);
             break;
         case('R'):                          //MANO
             if(Ang3==180){break;}else{
-                Ang3++;}
+                Ang3=Ang3+5;}
             Servo_Mano(Ang3);
             break;
         case('F'):
             if(Ang3==0){break;}else{
-                Ang3--;}
+                Ang3=Ang3-5;}
             Servo_Mano(Ang3);
             break;
     }
@@ -486,15 +493,27 @@ void Estado2(uint8_t instruccion){              //Estado Boxeador
 }
 /***********************METODOS PARA CARGA DE SERVOS, RECIBEN ANGULO*******************/
 void Servo_Base(int Ang){
+    ControlAng1=Ang;
     float trabajo = (0.01028*Ang)+0.6;
     PWMPulseWidthSet(PWM0_BASE,PWM_OUT_3,trabajo*Load/20);
 }
 void Servo_Brazo(int Ang){
+    ControlAng2=Ang;
     float trabajo = (0.01055*Ang)+0.55;
     PWMPulseWidthSet(PWM1_BASE,PWM_OUT_0,trabajo*Load/20);
 }
 void Servo_Mano(int Ang){
+    ControlAng3=Ang;
     float trabajo = (0.01111*Ang)+0.5;
     PWMPulseWidthSet(PWM1_BASE,PWM_OUT_1,trabajo*Load/20);
 }
 /****************************************************************************************/
+void Posicion_Inicial(void){
+    for(i=0; i<16;i++){
+        Servo_Base(INICIAL[i].Base);
+        Servo_Brazo(INICIAL[i].Brazo);
+        Servo_Mano(INICIAL[i].Mano);
+        SysCtlDelay(Time*SysCtlClockGet()/3);
+    }
+    i=0;
+}
